@@ -1,0 +1,363 @@
+{% extends "layout.html" %}
+
+{% block title %}Demo Payment - ChargeLive{% endblock %}
+
+{% block content %}
+<section class="booking-shell">
+    <div class="container">
+        <div class="booking-grid fade-in">
+            <!-- Left Panel: Summary -->
+            <aside class="booking-station-panel">
+                <span class="section-badge text-warning border-warning">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                    Payment Pending
+                </span>
+                <h1>Secure Checkout</h1>
+                <p>Complete your demo payment to lock your charging slot.</p>
+
+                <div class="booking-station-card mb-3">
+                    <div class="booking-station-icon bg-primary text-white">
+                        <i class="fa-solid fa-charging-station"></i>
+                    </div>
+                    <div>
+                        <strong>{{ station.station_name }}</strong>
+                        <span>{{ station.city }}</span>
+                    </div>
+                </div>
+
+                <div class="card p-3 bg-light border rounded">
+                    <h6 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2 text-primary"></i>Booking Summary</h6>
+                    <div class="row g-2 small">
+                        <div class="col-6 text-muted">Selected Charger:</div>
+                        <div class="col-6 text-end fw-semibold">{{ charger.charger_name }}</div>
+                        
+                        <div class="col-6 text-muted">Connector:</div>
+                        <div class="col-6 text-end fw-semibold">{{ charger.connector_type }} ({{ "%.2f"|format(charger.power_kw) }} kW)</div>
+                        
+                        <div class="col-6 text-muted">Date:</div>
+                        <div class="col-6 text-end fw-semibold">{{ booking.booking_date.strftime('%d %b %Y') }}</div>
+                        
+                        <div class="col-6 text-muted">Time Slot:</div>
+                        <div class="col-6 text-end fw-semibold">{{ booking.booking_start_time.strftime('%I:%M %p') }} - {{ booking.booking_end_time.strftime('%I:%M %p') }}</div>
+                        
+                        <div class="col-6 text-muted">Duration:</div>
+                        <div class="col-6 text-end fw-semibold">{{ duration_mins }} Minutes</div>
+                        
+                        <div class="col-6 text-muted">Estimated Energy:</div>
+                        <div class="col-6 text-end fw-semibold text-primary">{{ "%.2f"|format(energy_kwh) }} kWh</div>
+                        
+                        <hr class="my-2">
+                        
+                        <div class="col-6 fw-bold fs-6">Amount to Pay:</div>
+                        <div class="col-6 text-end fw-bold text-success fs-5">Rs. {{ "%.2f"|format(estimated_cost) }}</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Panel: Payment Methods -->
+            <div class="booking-card">
+                <h4 class="fw-bold mb-4">Choose Payment Method</h4>
+                
+                <!-- Payment Tabs / Options -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <button class="btn btn-outline-primary active payment-tab-btn" data-target="upi">
+                        <i class="fa-solid fa-qrcode me-1"></i> UPI
+                    </button>
+                    <button class="btn btn-outline-primary payment-tab-btn" data-target="card">
+                        <i class="fa-solid fa-credit-card me-1"></i> Card
+                    </button>
+                    <button class="btn btn-outline-primary payment-tab-btn" data-target="netbanking">
+                        <i class="fa-solid fa-building-columns me-1"></i> Net Banking
+                    </button>
+                    <button class="btn btn-outline-primary payment-tab-btn" data-target="wallet">
+                        <i class="fa-solid fa-wallet me-1"></i> Wallet
+                    </button>
+                    <button class="btn btn-outline-primary payment-tab-btn" data-target="cash">
+                        <i class="fa-solid fa-money-bill-wave me-1"></i> Cash
+                    </button>
+                </div>
+
+                <!-- UPI Payment Form -->
+                <div class="payment-form-panel" id="panel-upi">
+                    <div class="text-center p-3 border rounded bg-light mb-4">
+                        <h6 class="fw-bold mb-2">Scan QR Code to Pay</h6>
+                        <!-- Fake QR code generator from QRServer API -->
+                        <img class="img-fluid rounded border mb-2 shadow-sm" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=chargelive@upi%26pn=ChargeLive%26am={{ estimated_cost }}" alt="Demo QR Code" style="width: 150px; height: 150px;">
+                        <p class="small text-muted mb-0">UPI ID: <strong>chargelive@upi</strong></p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success flex-grow-1 btn-pay-now" data-method="UPI">
+                            <i class="fa-solid fa-circle-check me-2"></i> Pay Now (Rs. {{ "%.2f"|format(estimated_cost) }})
+                        </button>
+                        <a href="{{ url_for('home.station_details', station_id=station.station_id) }}" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                </div>
+
+                <!-- Card Payment Form -->
+                <div class="payment-form-panel" id="panel-card" style="display:none;">
+                    <form id="cardForm" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="cardHolder">Card Holder Name</label>
+                            <input type="text" id="cardHolder" class="form-control" placeholder="John Doe" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="cardNumber">Card Number</label>
+                            <input type="text" id="cardNumber" class="form-control" maxlength="16" placeholder="4111111111111111" required pattern="\d{16}">
+                            <div class="small text-muted">Enter any valid 16-digit card number</div>
+                        </div>
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <label class="form-label" for="cardExpiry">Expiry Date</label>
+                                <input type="text" id="cardExpiry" class="form-control" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="cardCvv">CVV</label>
+                                <input type="password" id="cardCvv" class="form-control" maxlength="3" placeholder="123" required pattern="\d{3}">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success flex-grow-1 btn-pay-now" data-method="Credit/Debit Card">
+                                <i class="fa-solid fa-credit-card me-2"></i> Pay Now (Rs. {{ "%.2f"|format(estimated_cost) }})
+                            </button>
+                            <a href="{{ url_for('home.station_details', station_id=station.station_id) }}" class="btn btn-outline-danger">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Net Banking Form -->
+                <div class="payment-form-panel" id="panel-netbanking" style="display:none;">
+                    <div class="mb-4">
+                        <label class="form-label" for="bankSelect">Select Bank</label>
+                        <select id="bankSelect" class="form-select" required>
+                            <option value="SBI">SBI (State Bank of India)</option>
+                            <option value="HDFC">HDFC Bank</option>
+                            <option value="ICICI">ICICI Bank</option>
+                            <option value="Axis">Axis Bank</option>
+                            <option value="BOB">Bank of Baroda</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success flex-grow-1 btn-pay-now" data-method="Net Banking">
+                            Continue <i class="fa-solid fa-arrow-right ms-2"></i>
+                        </button>
+                        <a href="{{ url_for('home.station_details', station_id=station.station_id) }}" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                </div>
+
+                <!-- Wallet Form -->
+                <div class="payment-form-panel" id="panel-wallet" style="display:none;">
+                    <div class="card p-3 border mb-4 bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-1"><i class="fa-solid fa-wallet text-primary me-2"></i>ChargeLive Wallet</h6>
+                                <span class="small text-muted">Available Balance: Rs. 2,500.00</span>
+                            </div>
+                            <span class="badge bg-success">Linked</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success flex-grow-1 btn-pay-now" data-method="ChargeLive Wallet">
+                            <i class="fa-solid fa-wallet me-2"></i> Pay (Rs. {{ "%.2f"|format(estimated_cost) }})
+                        </button>
+                        <a href="{{ url_for('home.station_details', station_id=station.station_id) }}" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                </div>
+
+                <!-- Cash at Station Form -->
+                <div class="payment-form-panel" id="panel-cash" style="display:none;">
+                    <div class="alert alert-info mb-4" role="alert">
+                        <h6 class="alert-heading fw-bold"><i class="fa-solid fa-info-circle me-1"></i>Pay Cash at Station</h6>
+                        <p class="small mb-0">Confirming this option will hold your slot. Please complete the cash payment directly at the station counter before starting your charging session.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success flex-grow-1 btn-pay-now" data-method="Cash at Station">
+                            <i class="fa-solid fa-circle-check me-2"></i> Confirm Slot
+                        </button>
+                        <a href="{{ url_for('home.station_details', station_id=station.station_id) }}" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Processing / Success Fullscreen Modal Overlay -->
+<div class="payment-loader-overlay" id="paymentLoader" style="display: none;">
+    <div class="loader-content text-center">
+        <!-- Spinner -->
+        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status" id="paymentSpinner"></div>
+        
+        <!-- Success Checkmark Animation (rendered using HTML/CSS) -->
+        <div class="success-animation mb-3" id="paymentCheck" style="display: none;">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+        </div>
+        
+        <h4 class="fw-bold" id="loaderText">Processing...</h4>
+        <p class="text-muted small" id="loaderSubtext">Connecting with secure bank server...</p>
+    </div>
+</div>
+
+<style>
+    /* Payment Tabs layout styling */
+    .payment-tab-btn {
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        padding: 6px 16px;
+    }
+    
+    /* Loader Overlay Styling */
+    .payment-loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.95);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .loader-content {
+        max-width: 300px;
+    }
+    
+    /* Success Checkmark CSS Animation */
+    .checkmark__circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #7ac142;
+        fill: none;
+        animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    .checkmark {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        margin: 10px auto;
+        box-shadow: inset 0px 0px 0px #7ac142;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s unique;
+    }
+    .checkmark__check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    }
+    @keyframes stroke {
+        100% { stroke-dashoffset: 0; }
+    }
+    @keyframes fill {
+        100% { box-shadow: inset 0px 0px 0px 30px #7ac142; }
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const tabs = document.querySelectorAll(".payment-tab-btn");
+        const panels = document.querySelectorAll(".payment-form-panel");
+        const loader = document.getElementById("paymentLoader");
+        const spinner = document.getElementById("paymentSpinner");
+        const checkmark = document.getElementById("paymentCheck");
+        const loaderText = document.getElementById("loaderText");
+        const loaderSubtext = document.getElementById("loaderSubtext");
+        
+        const bookingId = "{{ booking.booking_id }}";
+
+        // Handle Method Switching
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                // remove active classes
+                tabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                // hide all panels
+                panels.forEach(p => p.style.display = "none");
+                // show target panel
+                const target = tab.getAttribute("data-target");
+                document.getElementById(`panel-${target}`).style.display = "block";
+            });
+        });
+
+        // Pay action triggers faked processing delay + checkmark animations
+        async function processDemoPayment(methodName) {
+            loader.style.display = "flex";
+            spinner.style.display = "inline-block";
+            checkmark.style.display = "none";
+            loaderText.textContent = "Processing...";
+            loaderSubtext.textContent = "Connecting to secure bank gateway...";
+
+            // Delay 1.5 seconds for "Processing..."
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Change loader to Success animation
+            spinner.style.display = "none";
+            checkmark.style.display = "block";
+            loaderText.textContent = "Payment Successful";
+            loaderSubtext.textContent = "Generating invoice and transaction records...";
+
+            // Delay 1 second for success checkmark visualization
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // POST to confirmation endpoint
+            try {
+                const response = await fetch(`/book/payment/confirm/${bookingId}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-Token": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({ payment_method: methodName })
+                });
+
+                if (!response.ok) throw new Error("Payment confirmation failed");
+                const result = await response.json();
+
+                if (result.success && result.redirect_url) {
+                    window.location.href = result.redirect_url;
+                } else {
+                    alert("Error confirming payment. Redirecting back.");
+                    window.location.href = "/";
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Payment transaction failed. Please retry.");
+                loader.style.display = "none";
+            }
+        }
+
+        // Attach pay listeners
+        const payButtons = document.querySelectorAll(".btn-pay-now");
+        payButtons.forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                
+                // If Card Form panel, do basic validation
+                const activeTab = document.querySelector(".payment-tab-btn.active").getAttribute("data-target");
+                if (activeTab === "card") {
+                    const cardForm = document.getElementById("cardForm");
+                    if (!cardForm.checkValidity()) {
+                        cardForm.classList.add("was-validated");
+                        return;
+                    }
+                }
+                
+                const method = btn.getAttribute("data-method");
+                processDemoPayment(method);
+            });
+        });
+    });
+</script>
+{% endblock %}

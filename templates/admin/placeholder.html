@@ -1,0 +1,18 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{{ title }} - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading">
+    <div>
+        <span class="admin-eyebrow">Module</span>
+        <h1>{{ title }}</h1>
+    </div>
+</section>
+
+<section class="admin-placeholder-card">
+    <span><i class="bi {{ icon }}"></i></span>
+    <h2>{{ title }}</h2>
+    <p>No data available</p>
+</section>
+{% endblock %}

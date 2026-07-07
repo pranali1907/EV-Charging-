@@ -1,0 +1,120 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{{ title }} - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading admin-page-heading-actions">
+    <div>
+        <span class="admin-eyebrow">Charger Management</span>
+        <h1>{{ title }}</h1>
+    </div>
+    <a class="btn btn-outline-success rounded-pill" href="{{ url_for('admin.chargers') }}">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back
+    </a>
+</section>
+
+{% if errors %}
+    <div class="alert alert-danger admin-alert">
+        {% for error in errors %}
+            <div>{{ error }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<section class="admin-form-card">
+    {% if not stations %}
+        <div class="admin-empty-state admin-empty-state-compact">
+            <i class="bi bi-geo-alt"></i>
+            <h2>No stations available</h2>
+            <p>Create a station before adding chargers.</p>
+            <a class="btn btn-success rounded-pill" href="{{ url_for('admin.add_station') }}">
+                <i class="bi bi-plus-lg me-1"></i>
+                Add Station
+            </a>
+        </div>
+    {% elif not connectors %}
+        <div class="admin-empty-state admin-empty-state-compact">
+            <i class="bi bi-plug"></i>
+            <h2>No active connectors available</h2>
+            <p>Add an active connector before creating chargers.</p>
+            <a class="btn btn-success rounded-pill" href="{{ url_for('admin.add_connector') }}">
+                <i class="bi bi-plus-lg me-1"></i>
+                Add Connector
+            </a>
+        </div>
+    {% else %}
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <label class="form-label" for="stationId">Station</label>
+                    {% set selected_station = form_data.get('station_id') if form_data else (charger.station_id if charger else selected_station_id or '') %}
+                    <select id="stationId" name="station_id" class="form-select" required>
+                        <option value="">Select station</option>
+                        {% for station in stations %}
+                            <option value="{{ station.station_id }}" {{ "selected" if selected_station|string == station.station_id|string else "" }}>
+                                {{ station.station_name }} - {{ station.city }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label" for="chargerName">Charger Name</label>
+                    <input id="chargerName" name="charger_name" class="form-control" type="text" value="{{ (form_data.get('charger_name') if form_data else (charger.charger_name if charger else '')) or '' }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="connectorType">Connector Type</label>
+                    {% set selected_connector = form_data.get('connector_type_id') if form_data else (charger.connector_type_id if charger else '') %}
+                    <select id="connectorType" name="connector_type_id" class="form-select" required>
+                        <option value="">Select connector</option>
+                        {% for connector in connectors %}
+                            <option value="{{ connector.id }}" data-power="{{ connector.default_power_kw }}" data-vehicle="{{ connector.vehicle_type }}" {{ "selected" if selected_connector|string == connector.id|string else "" }}>
+                                {{ connector.connector_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="powerKw">Power (kW)</label>
+                    <input id="powerKw" name="power_kw" class="form-control" type="number" step="0.01" min="0.01" list="powerOptions" value="{{ (form_data.get('power_kw') if form_data else (charger.power_kw if charger else '')) or '' }}" required>
+                    <datalist id="powerOptions">
+                        {% for option in ["3.3", "7", "15", "22", "30", "60", "120"] %}
+                            <option value="{{ option }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="vehicleType">Vehicle Type</label>
+                    <input id="vehicleType" class="form-control" type="text" value="{{ (form_data.get('vehicle_type') if form_data else (charger.vehicle_type if charger else '')) or '' }}" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="chargerStatus">Status</label>
+                    {% set selected_status = form_data.get('status') if form_data else (charger.status.value if charger else 'Available') %}
+                    <select id="chargerStatus" name="status" class="form-select" required>
+                        {% for status in statuses %}
+                            <option value="{{ status }}" {{ "selected" if selected_status == status else "" }}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    {% set iot_checked = form_data.get('iot_enabled') == 'on' if form_data else (charger.iot_enabled if charger else false) %}
+                    <label class="form-label d-block" for="iotEnabled">IoT Mapping</label>
+                    <div class="form-check admin-inline-check">
+                        <input id="iotEnabled" name="iot_enabled" class="form-check-input" type="checkbox" {{ "checked" if iot_checked else "" }}>
+                        <label class="form-check-label" for="iotEnabled">IoT Enabled</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-form-actions">
+                <a class="btn btn-outline-secondary" href="{{ url_for('admin.chargers') }}">Cancel</a>
+                <button class="btn btn-success" type="submit">
+                    <i class="bi bi-check2-circle me-1"></i>
+                    Save Charger
+                </button>
+            </div>
+        </form>
+    {% endif %}
+</section>
+{% endblock %}

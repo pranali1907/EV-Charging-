@@ -1,0 +1,142 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Charger Bookings - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading">
+    <div>
+        <span class="admin-eyebrow">{{ charger.station.station_name }}</span>
+        <h1>Bookings for {{ charger.charger_name }}</h1>
+    </div>
+    <a class="btn btn-outline-secondary rounded-pill" href="{{ url_for('admin.chargers') }}">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back to Chargers
+    </a>
+</section>
+
+<!-- Charger Status Dashboard Section -->
+<section class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="admin-table-card p-3 h-100">
+            <h5 class="fw-bold mb-3">Charger Info</h5>
+            <p class="mb-1"><strong>Connector:</strong> {{ charger.connector.connector_name if charger.connector else charger.connector_type }}</p>
+            <p class="mb-1"><strong>Power:</strong> {{ "%.2f"|format(charger.power_kw) }} kW</p>
+            <p class="mb-1"><strong>Vehicle Type:</strong> {{ charger.vehicle_type }}</p>
+            <p class="mb-0">
+                <strong>Status:</strong> 
+                <span class="admin-status-pill admin-status-{{ charger.status.value | lower | replace(' ', '-') }}">
+                    {{ charger.status.value }}
+                </span>
+            </p>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="admin-table-card p-3 h-100">
+            <h5 class="fw-bold mb-3">Change Status</h5>
+            <form method="post" action="{{ url_for('admin.update_charger_status_route', charger_id=charger.charger_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <select name="status" class="form-select">
+                        <option value="Available" {{ "selected" if charger.status.value == "Available" else "" }}>Enable (Available)</option>
+                        <option value="Offline" {{ "selected" if charger.status.value == "Offline" else "" }}>Disable (Offline)</option>
+                        <option value="Maintenance" {{ "selected" if charger.status.value == "Maintenance" else "" }}>Under Maintenance</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm w-100">Update Status</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Current & Next Booking Info -->
+<section class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="admin-table-card p-3 h-100">
+            <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-clock-history me-1"></i>Current Active Booking</h5>
+            {% if current_booking %}
+                <div class="p-3 bg-light rounded border mb-3">
+                    <p class="mb-1"><strong>User Mobile:</strong> {{ current_booking.user_mobile }}</p>
+                    <p class="mb-1"><strong>Date:</strong> {{ current_booking.booking_date.strftime('%d %b %Y') }}</p>
+                    <p class="mb-1"><strong>Time Range:</strong> {{ current_booking.booking_start_time.strftime('%I:%M %p') }} - {{ current_booking.booking_end_time.strftime('%I:%M %p') }}</p>
+                    <p class="mb-0"><strong>Status:</strong> <span class="badge bg-primary">{{ current_booking.booking_status.value }}</span></p>
+                </div>
+                <div class="d-flex gap-2">
+                    <form method="post" action="{{ url_for('admin.complete_booking', booking_id=current_booking.booking_id) }}" class="flex-grow-1">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-success w-100" type="submit">Complete Booking</button>
+                    </form>
+                    <form method="post" action="{{ url_for('admin.cancel_booking', booking_id=current_booking.booking_id) }}" class="flex-grow-1">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-danger w-100" type="submit">Cancel Booking</button>
+                    </form>
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">No active reservation for this charger right now.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="admin-table-card p-3 h-100">
+            <h5 class="fw-bold mb-3 text-info"><i class="bi bi-calendar2-event me-1"></i>Next Upcoming Booking</h5>
+            {% if next_booking %}
+                <div class="p-3 bg-light rounded border mb-3">
+                    <p class="mb-1"><strong>User Mobile:</strong> {{ next_booking.user_mobile }}</p>
+                    <p class="mb-1"><strong>Date:</strong> {{ next_booking.booking_date.strftime('%d %b %Y') }}</p>
+                    <p class="mb-1"><strong>Time Range:</strong> {{ next_booking.booking_start_time.strftime('%I:%M %p') }} - {{ next_booking.booking_end_time.strftime('%I:%M %p') }}</p>
+                    <p class="mb-0"><strong>Status:</strong> <span class="badge bg-info">{{ next_booking.booking_status.value }}</span></p>
+                </div>
+                <form method="post" action="{{ url_for('admin.cancel_booking', booking_id=next_booking.booking_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-outline-danger w-100" type="submit">Cancel Next Booking</button>
+                </form>
+            {% else %}
+                <p class="text-muted mb-0">No upcoming reservations scheduled.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Detailed Charger Booking History -->
+<section class="admin-table-card">
+    <div class="p-3 border-bottom">
+        <h5 class="fw-bold m-0">Booking History</h5>
+    </div>
+    {% if history_bookings %}
+        <div class="table-responsive">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>User Mobile</th>
+                        <th>Date</th>
+                        <th>Time Window</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in history_bookings %}
+                    <tr>
+                        <td>#{{ booking.booking_id }}</td>
+                        <td>{{ booking.user_mobile }}</td>
+                        <td>{{ booking.booking_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ booking.booking_start_time.strftime('%I:%M %p') }} - {{ booking.booking_end_time.strftime('%I:%M %p') }}</td>
+                        <td>
+                            <span class="admin-status-pill admin-status-{{ booking.booking_status.value | lower }}">
+                                {{ booking.booking_status.value }}
+                            </span>
+                        </td>
+                        <td>{{ booking.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="p-4 text-center text-muted">
+            <p class="mb-0">No historical reservations found for this charger.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

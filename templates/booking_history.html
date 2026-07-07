@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+
+{% block title %}My Booking History - ChargeLive{% endblock %}
+
+{% block content %}
+<section class="booking-shell">
+    <div class="container">
+        <!-- Breadcrumb navigation -->
+        <nav aria-label="breadcrumb" class="details-breadcrumb fade-in">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Booking History</li>
+            </ol>
+        </nav>
+
+        <div class="row fade-in">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <span class="section-badge"><i class="fa-solid fa-clock-history me-1"></i>My History</span>
+                        <h1 class="h2 fw-bold m-0 mt-1">Charging Bookings</h1>
+                        <p class="text-muted small m-0 mt-1">Showing all reservations for mobile: <strong>+91 {{ user_mobile }}</strong></p>
+                    </div>
+                    <a href="{{ url_for('home.index') }}#stations" class="btn btn-primary rounded-pill">
+                        <i class="fa-solid fa-plus me-1"></i> New Booking
+                    </a>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="booking-alerts">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} mb-3" role="alert">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% if bookings %}
+                    <!-- Categorized Tabs -->
+                    <div class="card border shadow-sm p-4 bg-white">
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Station / Charger</th>
+                                        <th>Date & Slot</th>
+                                        <th>Duration / Energy</th>
+                                        <th>Payment</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in bookings %}
+                                    <tr>
+                                        <td><strong>#{{ item.booking.booking_id }}</strong></td>
+                                        <td>
+                                            <div class="fw-semibold">{{ item.booking.station.station_name }}</div>
+                                            <span class="small text-muted">{{ item.booking.charger.charger_name }} ({{ item.booking.charger.connector_type }})</span>
+                                        </td>
+                                        <td>
+                                            <div>{{ item.booking.booking_date.strftime('%d %b %Y') }}</div>
+                                            <span class="small text-muted fw-semibold text-primary">{{ item.booking.booking_start_time.strftime('%I:%M %p') }} - {{ item.booking.booking_end_time.strftime('%I:%M %p') }}</span>
+                                        </td>
+                                        <td>
+                                            <div>{{ item.duration_mins }} Mins</div>
+                                            <span class="small text-muted">{{ "%.2f"|format(item.energy_kwh) }} kWh</span>
+                                        </td>
+                                        <td>
+                                            {% if item.booking.payment %}
+                                                <div class="fw-semibold text-success">Rs. {{ "%.2f"|format(item.booking.booking_token_amount) }}</div>
+                                                <span class="badge bg-light text-muted border">{{ item.booking.payment.payment_method }}</span>
+                                            {% else %}
+                                                <div class="fw-semibold text-muted">Rs. {{ "%.2f"|format(item.booking.booking_token_amount) }}</div>
+                                                <span class="badge bg-light text-danger border">Unpaid</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.status_category == "Upcoming" %}
+                                                <span class="badge bg-primary">Upcoming</span>
+                                            {% elif item.status_category == "Cancelled" %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.booking.booking_status.value in ["Pending", "Confirmed"] %}
+                                                {% if item.booking.payment %}
+                                                    <a href="{{ url_for('book.receipt_page', booking_id=item.booking.booking_id) }}" class="btn btn-sm btn-outline-success rounded-pill">
+                                                        <i class="fa-solid fa-receipt me-1"></i> Receipt
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ url_for('book.payment_page', booking_id=item.booking.booking_id) }}" class="btn btn-sm btn-warning rounded-pill text-white">
+                                                        <i class="fa-solid fa-credit-card me-1"></i> Pay
+                                                    </a>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted small">None</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="card text-center p-5 border shadow-sm bg-white">
+                        <div class="mb-3 text-muted">
+                            <i class="fa-solid fa-calendar-xmark fa-3x"></i>
+                        </div>
+                        <h4 class="fw-bold">No bookings found</h4>
+                        <p class="text-muted mb-4">You have not scheduled any charging sessions yet.</p>
+                        <div>
+                            <a href="{{ url_for('home.index') }}#stations" class="btn btn-primary rounded-pill px-4">
+                                Discover Stations
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

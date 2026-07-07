@@ -1,0 +1,79 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Payments - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading">
+    <div>
+        <span class="admin-eyebrow">Financial Transactions</span>
+        <h1>Payments</h1>
+    </div>
+</section>
+
+<!-- Financial Stats Grid -->
+<section class="admin-stat-grid mb-4">
+    <article class="admin-stat-card">
+        <span><i class="bi bi-wallet2"></i></span>
+        <div>
+            <p>Total Revenue</p>
+            <strong>Rs. {{ "%.2f"|format(total_revenue) }}</strong>
+        </div>
+    </article>
+    <article class="admin-stat-card">
+        <span><i class="bi bi-check-circle"></i></span>
+        <div>
+            <p>Completed Transactions</p>
+            <strong>{{ payments | selectattr('payment_status.value', 'equalto', 'Success') | list | length }}</strong>
+        </div>
+    </article>
+</section>
+
+<section class="admin-table-card">
+    {% if payments %}
+        <div class="table-responsive">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Transaction ID</th>
+                        <th>Booking ID</th>
+                        <th>Payment Method</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Payment Date</th>
+                        <th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr>
+                        <td>#{{ p.payment_id }}</td>
+                        <td><strong class="font-monospace text-primary">{{ p.transaction_id if p.transaction_id else 'N/A' }}</strong></td>
+                        <td>#{{ p.booking_id }}</td>
+                        <td>{{ p.payment_method if p.payment_method else p.payment_type }}</td>
+                        <td><strong>Rs. {{ "%.2f"|format(p.amount) }}</strong></td>
+                        <td>
+                            <span class="admin-status-pill admin-status-{{ p.payment_status.value | lower }}">
+                                {{ p.payment_status.value }}
+                            </span>
+                        </td>
+                        <td>{{ p.payment_date.strftime('%d %b %Y, %I:%M %p') if p.payment_date else p.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-success" href="{{ url_for('book.receipt_page', booking_id=p.booking_id) }}" target="_blank" title="View Receipt">
+                                <i class="bi bi-receipt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="admin-empty-state">
+            <i class="bi bi-credit-card-2-back"></i>
+            <h2>No payments recorded</h2>
+            <p>Transactions will show up here once users complete demo payments.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

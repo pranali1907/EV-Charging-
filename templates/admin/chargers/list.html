@@ -1,0 +1,141 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Chargers - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading admin-page-heading-actions">
+    <div>
+        <span class="admin-eyebrow">Charger Management</span>
+        <h1>Chargers</h1>
+    </div>
+    <a class="btn btn-success rounded-pill" href="{{ url_for('admin.add_charger') }}">
+        <i class="bi bi-plus-lg me-1"></i>
+        Add Charger
+    </a>
+</section>
+
+<section class="admin-filter-card">
+    <form class="row g-3 align-items-end" method="get">
+        <div class="col-lg-5">
+            <label class="form-label" for="chargerSearch">Search</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input id="chargerSearch" name="q" class="form-control" type="search" value="{{ search_query }}" placeholder="Station, charger, connector, or vehicle">
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="chargerStatus">Status</label>
+            <select id="chargerStatus" name="status" class="form-select">
+                {% for option in ["All"] + statuses %}
+                    <option value="{{ option }}" {{ "selected" if status_filter == option else "" }}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-2">
+            <label class="form-label" for="connectorFilter">Connector</label>
+            <select id="connectorFilter" name="connector" class="form-select">
+                {% for option in ["All"] + connectors %}
+                    <option value="{{ option }}" {{ "selected" if connector_filter == option else "" }}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-2">
+            <label class="form-label" for="stationFilter">Station</label>
+            <select id="stationFilter" name="station_id" class="form-select">
+                <option value="">All</option>
+                {% for station in stations %}
+                    <option value="{{ station.station_id }}" {{ "selected" if station_filter|string == station.station_id|string else "" }}>{{ station.station_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-12">
+            <button class="btn btn-primary w-100" type="submit">
+                <i class="bi bi-funnel me-1"></i>
+                Apply
+            </button>
+        </div>
+    </form>
+</section>
+
+<section class="admin-table-card">
+    {% if chargers %}
+        <div class="table-responsive">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Charger ID</th>
+                        <th>Station Name</th>
+                        <th>Charger Name</th>
+                        <th>Connector Type</th>
+                        <th>Power (kW)</th>
+                        <th>Vehicle</th>
+                        <th>Status</th>
+                        <th>IoT</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for charger in chargers %}
+                    <tr>
+                        <td>#{{ charger.charger_id }}</td>
+                        <td>{{ charger.station_name }}</td>
+                        <td><strong>{{ charger.charger_name }}</strong></td>
+                        <td>{{ charger.connector_type }}</td>
+                        <td>{{ "%.2f"|format(charger.power_kw) }}</td>
+                        <td>{{ charger.vehicle_type }}</td>
+                        <td>
+                            <span class="admin-status-pill admin-status-{{ charger.status | lower | replace(' ', '-') }}">
+                                {{ charger.status }}
+                            </span>
+                        </td>
+                        <td>{{ "Enabled" if charger.iot_enabled else "Disabled" }}</td>
+                        <td>{{ charger.updated_at }}</td>
+                        <td>
+                            <div class="admin-table-actions">
+                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.charger_bookings', charger_id=charger.charger_id) }}" title="View Bookings">
+                                    <i class="bi bi-calendar-check"></i>
+                                </a>
+                                <a class="btn btn-sm btn-outline-success" href="{{ url_for('admin.edit_charger', charger_id=charger.charger_id) }}" title="Edit Charger">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteChargerModal{{ charger.charger_id }}" title="Delete Charger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+
+                            <div class="modal fade" id="deleteChargerModal{{ charger.charger_id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content admin-modal">
+                                        <div class="modal-header">
+                                            <h2 class="modal-title fs-5">Delete Charger</h2>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Delete <strong>{{ charger.charger_name }}</strong> from {{ charger.station_name }}?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form method="post" action="{{ url_for('admin.delete_charger_route', charger_id=charger.charger_id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="btn btn-danger" type="submit">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="admin-empty-state">
+            <i class="bi bi-lightning-charge"></i>
+            <h2>No chargers found</h2>
+            <p>Add a charger after creating at least one station.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,122 @@
+[
+    {
+        "id": 1,
+        "station_name": "Pune GreenCharge Hub",
+        "city": "Pune",
+        "latitude": 18.5204,
+        "longitude": 73.8567,
+        "available_chargers": 5,
+        "total_chargers": 8,
+        "connector_types": ["CCS2", "Type-2"],
+        "price_per_kwh": 18,
+        "status": "Available"
+    },
+    {
+        "id": 2,
+        "station_name": "Hinjewadi EV Point",
+        "city": "Pune",
+        "latitude": 18.5913,
+        "longitude": 73.7389,
+        "available_chargers": 1,
+        "total_chargers": 6,
+        "connector_types": ["CCS2", "LECCS"],
+        "price_per_kwh": 20,
+        "status": "Busy"
+    },
+    {
+        "id": 3,
+        "station_name": "Kolhapur FastCharge Plaza",
+        "city": "Kolhapur",
+        "latitude": 16.705,
+        "longitude": 74.2433,
+        "available_chargers": 4,
+        "total_chargers": 5,
+        "connector_types": ["CCS2", "15A AC Socket"],
+        "price_per_kwh": 17,
+        "status": "Available"
+    },
+    {
+        "id": 4,
+        "station_name": "Rankala Lake Charging Station",
+        "city": "Kolhapur",
+        "latitude": 16.6976,
+        "longitude": 74.2131,
+        "available_chargers": 0,
+        "total_chargers": 4,
+        "connector_types": ["Type-2", "15A AC Socket"],
+        "price_per_kwh": 16,
+        "status": "Offline"
+    },
+    {
+        "id": 5,
+        "station_name": "Sangli CityCharge Center",
+        "city": "Sangli",
+        "latitude": 16.8524,
+        "longitude": 74.5815,
+        "available_chargers": 3,
+        "total_chargers": 6,
+        "connector_types": ["CCS2", "Type-2"],
+        "price_per_kwh": 18,
+        "status": "Available"
+    },
+    {
+        "id": 6,
+        "station_name": "Vishrambag EV Stop",
+        "city": "Sangli",
+        "latitude": 16.8611,
+        "longitude": 74.6015,
+        "available_chargers": 1,
+        "total_chargers": 3,
+        "connector_types": ["LECCS", "15A AC Socket"],
+        "price_per_kwh": 15,
+        "status": "Busy"
+    },
+    {
+        "id": 7,
+        "station_name": "Satara Highway Charge",
+        "city": "Satara",
+        "latitude": 17.6805,
+        "longitude": 74.0183,
+        "available_chargers": 4,
+        "total_chargers": 7,
+        "connector_types": ["CCS2", "Type-2", "LECCS"],
+        "price_per_kwh": 19,
+        "status": "Available"
+    },
+    {
+        "id": 8,
+        "station_name": "Satara Central EV Bay",
+        "city": "Satara",
+        "latitude": 17.6868,
+        "longitude": 73.993,
+        "available_chargers": 0,
+        "total_chargers": 5,
+        "connector_types": ["Type-2", "15A AC Socket"],
+        "price_per_kwh": 16,
+        "status": "Busy"
+    },
+    {
+        "id": 9,
+        "station_name": "Ichalkaranji PowerDock",
+        "city": "Ichalkaranji",
+        "latitude": 16.6912,
+        "longitude": 74.4605,
+        "available_chargers": 2,
+        "total_chargers": 4,
+        "connector_types": ["CCS2", "LECCS"],
+        "price_per_kwh": 18,
+        "status": "Available"
+    },
+    {
+        "id": 10,
+        "station_name": "Textile City EV Station",
+        "city": "Ichalkaranji",
+        "latitude": 16.709,
+        "longitude": 74.4561,
+        "available_chargers": 0,
+        "total_chargers": 3,
+        "connector_types": ["Type-2", "15A AC Socket"],
+        "price_per_kwh": 15,
+        "status": "Offline"
+    }
+]

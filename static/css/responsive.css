@@ -1,0 +1,144 @@
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        padding: 1rem 0;
+    }
+
+    .nav-link {
+        margin-left: 0;
+        padding: 0.6rem 0;
+    }
+
+    .discovery-header,
+    .list-toolbar,
+    .location-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .discovery-header h1 {
+        font-size: 2.15rem;
+    }
+
+    .station-banner {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .station-map {
+        min-height: 480px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .discovery-shell {
+        padding-top: 6rem;
+    }
+
+    .discovery-header h1 {
+        font-size: 1.85rem;
+    }
+
+    .discovery-header .btn {
+        width: 100%;
+    }
+
+    .search-panel,
+    .station-card,
+    .station-detail-summary,
+    .station-image-wrap,
+    .overview-card,
+    .details-card,
+    .booking-station-panel,
+    .booking-card {
+        border-radius: 18px;
+    }
+
+    .filter-chip-group {
+        gap: 0.5rem;
+    }
+
+    .filter-chip {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.84rem;
+    }
+
+    .station-map {
+        min-height: 390px;
+    }
+
+    .station-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-title-row,
+    .charging-info-item,
+    .charger-item,
+    .charger-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .detail-title-row h1 {
+        font-size: 1.75rem;
+    }
+
+    .detail-metrics,
+    .amenities-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-actions .btn {
+        width: 100%;
+    }
+
+    .station-image-wrap,
+    .station-detail-image {
+        min-height: 300px;
+    }
+
+    .station-detail-map {
+        min-height: 300px;
+    }
+
+    .booking-shell {
+        padding-top: 6rem;
+    }
+
+    .booking-station-panel h1 {
+        font-size: 1.75rem;
+    }
+
+    .footer-links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .navbar-brand,
+    .footer-brand {
+        font-size: 1.25rem;
+    }
+
+    .brand-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .discovery-header h1,
+    .list-toolbar h2,
+    .details-card-heading h2 {
+        font-size: 1.55rem;
+    }
+
+    .station-card-header {
+        flex-direction: column;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+    }
+}

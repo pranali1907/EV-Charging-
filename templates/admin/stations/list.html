@@ -1,0 +1,138 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Stations - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading admin-page-heading-actions">
+    <div>
+        <span class="admin-eyebrow">Station Management</span>
+        <h1>Stations</h1>
+    </div>
+    <a class="btn btn-success rounded-pill" href="{{ url_for('admin.add_station') }}">
+        <i class="bi bi-plus-lg me-1"></i>
+        Add Station
+    </a>
+</section>
+
+<section class="admin-filter-card">
+    <form class="row g-3 align-items-end" method="get">
+        <div class="col-lg-6">
+            <label class="form-label" for="stationSearch">Search by station or city</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input id="stationSearch" name="q" class="form-control" type="search" value="{{ search_query }}" placeholder="Search station name or city">
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="stationStatus">Status</label>
+            <select id="stationStatus" name="status" class="form-select">
+                {% for option in ["All", "Active", "Inactive"] %}
+                    <option value="{{ option }}" {{ "selected" if status_filter == option else "" }}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <button class="btn btn-primary w-100" type="submit">
+                <i class="bi bi-funnel me-1"></i>
+                Apply
+            </button>
+        </div>
+    </form>
+</section>
+
+<section class="admin-table-card">
+    {% if stations %}
+        <div class="table-responsive">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Station ID</th>
+                        <th>Station Image</th>
+                        <th>Station Name</th>
+                        <th>City</th>
+                        <th>Address</th>
+                        <th>Price per kWh</th>
+                        <th>Status</th>
+                        <th>Total Chargers</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for station in stations %}
+                    <tr>
+                        <td>#{{ station.station_id }}</td>
+                        <td>
+                            {% if station.image_url %}
+                                <img class="admin-station-thumb" src="{{ url_for('static', filename=station.image_url) }}" alt="{{ station.station_name }}">
+                            {% else %}
+                                <div class="admin-station-thumb admin-station-thumb-empty">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ station.station_name }}</strong>
+                            <small>{{ "Open 24 Hours" if station.is_open_24_hours else station.opening_time ~ " - " ~ station.closing_time }}</small>
+                        </td>
+                        <td>{{ station.city }}</td>
+                        <td class="admin-address-cell">{{ station.address }}</td>
+                        <td>Rs. {{ "%.2f"|format(station.price_per_kwh) }}</td>
+                        <td>
+                            <span class="admin-status-pill admin-status-{{ station.status | lower }}">
+                                {{ station.status }}
+                            </span>
+                        </td>
+                        <td>{{ station.total_chargers }}</td>
+                        <td>
+                            <div class="admin-table-actions">
+                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.chargers', station_id=station.station_id) }}" title="Manage chargers">
+                                    <i class="bi bi-lightning-charge"></i>
+                                </a>
+                                <a class="btn btn-sm btn-outline-success" href="{{ url_for('admin.edit_station', station_id=station.station_id) }}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteStationModal{{ station.station_id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+
+                            <div class="modal fade" id="deleteStationModal{{ station.station_id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content admin-modal">
+                                        <div class="modal-header">
+                                            <h2 class="modal-title fs-5">Delete Station</h2>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Delete <strong>{{ station.station_name }}</strong>?
+                                            {% if station.total_chargers > 0 %}
+                                                <p class="text-danger mt-2 mb-0">This station has chargers and cannot be deleted.</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form method="post" action="{{ url_for('admin.delete_station_route', station_id=station.station_id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="btn btn-danger" type="submit" {{ "disabled" if station.total_chargers > 0 else "" }}>
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="admin-empty-state">
+            <i class="bi bi-geo-alt"></i>
+            <h2>No stations found</h2>
+            <p>Add the first station or adjust your search and filters.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

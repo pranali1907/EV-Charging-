@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block title %}Not Found - ChargeLive{% endblock %}
+
+{% block content %}
+<section class="not-found-section">
+    <div class="container">
+        <div class="not-found-panel fade-in">
+            <div class="empty-illustration" aria-hidden="true">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span></span>
+            </div>
+            <span class="section-badge">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                Not Found
+            </span>
+            <h1>Station Not Found</h1>
+            <p>{{ message }}</p>
+            <a href="{{ url_for('home.index') }}" class="btn btn-primary rounded-pill">
+                <i class="fa-solid fa-arrow-left me-2"></i>
+                Back to Stations
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

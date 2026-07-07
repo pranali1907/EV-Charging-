@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block title %}Verify Mobile - ChargeLive{% endblock %}
+
+{% block content %}
+<section class="booking-shell">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="details-breadcrumb fade-in">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}">Home</a></li>
+                {% if not is_generic and station %}
+                <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}#stations">Stations</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('home.station_details', station_id=station.station_id) }}">{{ station.station_name }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">Verify Mobile</li>
+            </ol>
+        </nav>
+
+        <div class="booking-grid fade-in">
+            <aside class="booking-station-panel">
+                <span class="section-badge">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Guest Verification
+                </span>
+                <h1>Verify your mobile number</h1>
+                <p>ChargeLive uses a quick demo OTP check before opening the page.</p>
+
+                {% if not is_generic and station %}
+                <div class="booking-station-card">
+                    <div class="booking-station-icon">
+                        <i class="fa-solid fa-charging-station"></i>
+                    </div>
+                    <div>
+                        <strong>{{ station.station_name }}</strong>
+                        <span>{{ station.city }} &middot; {{ charger.charger_name }} &middot; {{ charger.connector_type }} &middot; {{ "%.2f"|format(charger.power_kw) }} kW</span>
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
+
+            <div class="booking-card">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="booking-alerts">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} mb-3" role="alert">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form id="sendOtpForm" class="otp-form" action="{{ url_for('book.send_otp') }}" method="post" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if station %}
+                    <input type="hidden" name="station_id" value="{{ station.station_id }}">
+                    <input type="hidden" name="charger_id" value="{{ charger.charger_id }}">
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label" for="mobileNumber">Mobile Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+91</span>
+                            <input id="mobileNumber" class="form-control" name="mobile_number" type="tel" value="{{ mobile_number }}" inputmode="numeric" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="9876543210" required>
+                        </div>
+                        <div class="invalid-feedback">Enter a valid 10-digit Indian mobile number.</div>
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">
+                        <i class="fa-solid fa-paper-plane me-2"></i>
+                        Send OTP
+                    </button>
+                </form>
+
+                <hr class="booking-divider">
+
+                <form id="verifyOtpForm" class="otp-form" action="{{ url_for('book.verify_otp') }}" method="post" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if station %}
+                    <input type="hidden" name="station_id" value="{{ station.station_id }}">
+                    <input type="hidden" name="charger_id" value="{{ charger.charger_id }}">
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label" for="verifyMobileNumber">Mobile Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+91</span>
+                            <input id="verifyMobileNumber" class="form-control" name="mobile_number" type="tel" value="{{ mobile_number }}" inputmode="numeric" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="9876543210" required>
+                        </div>
+                        <div class="invalid-feedback">Enter the same valid mobile number used for OTP.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="otp">OTP</label>
+                        <input id="otp" class="form-control otp-input" name="otp" type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit OTP" required>
+                        <div class="invalid-feedback">OTP must be exactly 6 digits.</div>
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">
+                        <i class="fa-solid fa-circle-check me-2"></i>
+                        Verify OTP
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/guest-otp.js') }}"></script>
+{% endblock %}

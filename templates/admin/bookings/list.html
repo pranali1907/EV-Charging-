@@ -1,0 +1,103 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Bookings - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading">
+    <div>
+        <span class="admin-eyebrow">User Reservations</span>
+        <h1>Bookings</h1>
+    </div>
+</section>
+
+<section class="admin-filter-card">
+    <form class="row g-3 align-items-end" method="get">
+        <div class="col-lg-8">
+            <label class="form-label" for="bookingSearch">Search</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input id="bookingSearch" name="q" class="form-control" type="search" value="{{ search_query }}" placeholder="Search by mobile number or station name">
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <label class="form-label" for="bookingStatus">Status</label>
+            <select id="bookingStatus" name="status" class="form-select">
+                <option value="All" {{ "selected" if status_filter == "All" else "" }}>All</option>
+                {% for option in statuses %}
+                    <option value="{{ option }}" {{ "selected" if status_filter == option else "" }}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-12">
+            <button class="btn btn-primary w-100" type="submit">
+                <i class="bi bi-funnel me-1"></i>
+                Apply Filters
+            </button>
+        </div>
+    </form>
+</section>
+
+<section class="admin-table-card">
+    {% if bookings_detail %}
+        <div class="table-responsive">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>User Mobile</th>
+                        <th>Station Name</th>
+                        <th>Charger Name</th>
+                        <th>Booking Date</th>
+                        <th>Time Slot</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings_detail %}
+                    <tr>
+                        <td>#{{ booking.booking_id }}</td>
+                        <td><strong>{{ booking.user_mobile }}</strong></td>
+                        <td>{{ booking.station_name }}</td>
+                        <td>{{ booking.charger_name }}</td>
+                        <td>{{ booking.booking_date }}</td>
+                        <td>{{ booking.time_range }}</td>
+                        <td>
+                            <span class="admin-status-pill admin-status-{{ booking.booking_status | lower }}">
+                                {{ booking.booking_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="admin-table-actions">
+                                {% if booking.booking_status in ["Pending", "Confirmed", "Charging"] %}
+                                    <form method="post" action="{{ url_for('admin.complete_booking', booking_id=booking.booking_id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-outline-success" type="submit" title="Complete Booking">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{{ url_for('admin.cancel_booking', booking_id=booking.booking_id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Cancel Booking">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted small">None</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="admin-empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <h2>No bookings found</h2>
+            <p>Modify search filters or book slots from the user side.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

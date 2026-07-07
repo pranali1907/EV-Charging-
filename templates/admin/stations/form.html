@@ -1,0 +1,134 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{{ title }} - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading admin-page-heading-actions">
+    <div>
+        <span class="admin-eyebrow">Station Management</span>
+        <h1>{{ title }}</h1>
+    </div>
+    <a class="btn btn-outline-success rounded-pill" href="{{ url_for('admin.stations') }}">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back
+    </a>
+</section>
+
+{% if errors %}
+    <div class="alert alert-danger admin-alert">
+        {% for error in errors %}
+            <div>{{ error }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<section class="admin-form-card">
+    <form id="stationForm" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="stationName">Station Name</label>
+                        <input id="stationName" name="station_name" class="form-control" type="text" value="{{ (form_data.get('station_name') if form_data else (station.station_name if station else '')) or '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="city">City</label>
+                        <input id="city" name="city" class="form-control" type="text" value="{{ (form_data.get('city') if form_data else (station.city if station else '')) or '' }}" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="address">Address</label>
+                        <input id="address" name="address" class="form-control" type="text" value="{{ (form_data.get('address') if form_data else (station.address if station else '')) or '' }}" required>
+                        <input id="latitude" name="latitude" type="hidden" value="{{ (form_data.get('latitude') if form_data else (station.latitude if station else '')) or '' }}">
+                        <input id="longitude" name="longitude" type="hidden" value="{{ (form_data.get('longitude') if form_data else (station.longitude if station else '')) or '' }}">
+                        <input id="displayName" name="display_name" type="hidden" value="{{ (form_data.get('display_name') if form_data else (station.display_name if station else '')) or '' }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label" for="pricePerKwh">Price per kWh</label>
+                        <input id="pricePerKwh" name="price_per_kwh" class="form-control" type="number" step="0.01" min="0.01" value="{{ (form_data.get('price_per_kwh') if form_data else (station.price_per_kwh if station else '')) or '' }}" required>
+                    </div>
+                    <div class="col-md-8">
+                        {% set open_24 = form_data.get('is_open_24_hours') == 'on' if form_data else (station.is_open_24_hours if station else false) %}
+                        <label class="form-label d-block" for="isOpen24Hours">Operating Mode</label>
+                        <div class="form-check admin-inline-check">
+                            <input id="isOpen24Hours" name="is_open_24_hours" class="form-check-input" type="checkbox" {{ "checked" if open_24 else "" }}>
+                            <label class="form-check-label" for="isOpen24Hours">Open 24 Hours</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="openingTime">Opening Time</label>
+                        <input id="openingTime" name="opening_time" class="form-control" type="time" value="{{ (form_data.get('opening_time') if form_data else (station.opening_time.strftime('%H:%M') if station and station.opening_time else '')) or '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="closingTime">Closing Time</label>
+                        <input id="closingTime" name="closing_time" class="form-control" type="time" value="{{ (form_data.get('closing_time') if form_data else (station.closing_time.strftime('%H:%M') if station and station.closing_time else '')) or '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="status">Status</label>
+                        <select id="status" name="status" class="form-select" required>
+                            {% set current_status = form_data.get('status') if form_data else (station.status if station else 'Active') %}
+                            {% for status in statuses %}
+                                <option value="{{ status }}" {{ "selected" if current_status == status else "" }}>{{ status }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="image">Image Upload</label>
+                        <input id="image" name="image" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="admin-form-side-panel">
+                    {% if station and station.image_url %}
+                        <h2>Current Image</h2>
+                        <img class="admin-current-image mb-4" src="{{ url_for('static', filename=station.image_url) }}" alt="{{ station.station_name }}">
+                    {% endif %}
+                    <h2>Charging Type</h2>
+                    <div class="station-connector-checks mb-3">
+                        {% set connector_options = connectors | default([]) %}
+                        {% set selected_connectors = selected_connector_ids | default([]) %}
+                        {% if connector_options %}
+                            {% for connector in connector_options %}
+                                <div class="form-check">
+                                    <input id="connectorType{{ connector.id }}" name="connector_type_ids" class="form-check-input" type="checkbox" value="{{ connector.id }}" {{ "checked" if connector.id in selected_connectors else "" }}>
+                                    <label class="form-check-label" for="connectorType{{ connector.id }}">{{ connector.connector_name }}</label>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {% for connector in ["CCS2", "Type-2", "LECCS", "15A AC Socket"] %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" disabled>
+                                    <label class="form-check-label">{{ connector }}</label>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        {% if station %}
+                            <a class="btn btn-success" href="{{ url_for('admin.add_charger', station_id=station.station_id) }}">
+                                <i class="bi bi-plus-lg me-1"></i>
+                                Add Charging Type
+                            </a>
+                        {% endif %}
+                        <a class="btn btn-outline-success" href="{{ url_for('admin.add_connector') }}">
+                            <i class="bi bi-plug me-1"></i>
+                            Add Extra Connector
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-form-actions">
+            <a class="btn btn-outline-secondary" href="{{ url_for('admin.stations') }}">Cancel</a>
+            <button class="btn btn-success" type="submit">
+                <i class="bi bi-check2-circle me-1"></i>
+                Save Station
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{{ title }} - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading admin-page-heading-actions">
+    <div>
+        <span class="admin-eyebrow">Connector Management</span>
+        <h1>{{ title }}</h1>
+    </div>
+    <a class="btn btn-outline-success rounded-pill" href="{{ url_for('admin.connectors') }}">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back
+    </a>
+</section>
+
+{% if errors %}
+    <div class="alert alert-danger admin-alert">
+        {% for error in errors %}
+            <div>{{ error }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<section class="admin-form-card">
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <label class="form-label" for="connectorName">Connector Name</label>
+                <input id="connectorName" name="connector_name" class="form-control" type="text" value="{{ (form_data.get('connector_name') if form_data else (connector.connector_name if connector else '')) or '' }}" required>
+            </div>
+            <div class="col-lg-6">
+                <label class="form-label" for="vehicleType">Vehicle Type</label>
+                {% set selected_vehicle = form_data.get('vehicle_type') if form_data else (connector.vehicle_type if connector else '') %}
+                <select id="vehicleType" name="vehicle_type" class="form-select" required>
+                    <option value="">Select vehicle</option>
+                    {% for vehicle in vehicles %}
+                        <option value="{{ vehicle }}" {{ "selected" if selected_vehicle == vehicle else "" }}>{{ vehicle }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-6">
+                <label class="form-label" for="defaultPowerKw">Default Power (kW)</label>
+                <input id="defaultPowerKw" name="default_power_kw" class="form-control" type="number" step="0.01" min="0.01" value="{{ (form_data.get('default_power_kw') if form_data else (connector.default_power_kw if connector else '')) or '' }}" required>
+            </div>
+            <div class="col-lg-6">
+                <label class="form-label" for="connectorStatus">Status</label>
+                {% set selected_status = form_data.get('status') if form_data else ('Active' if not connector or connector.is_active else 'Inactive') %}
+                <select id="connectorStatus" name="status" class="form-select" required>
+                    {% for status in statuses %}
+                        <option value="{{ status }}" {{ "selected" if selected_status == status else "" }}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="admin-form-actions">
+            <a class="btn btn-outline-secondary" href="{{ url_for('admin.connectors') }}">Cancel</a>
+            <button class="btn btn-success" type="submit">
+                <i class="bi bi-check2-circle me-1"></i>
+                Save Connector
+            </button>
+        </div>
+    </form>
+</section>
+{% endblock %}

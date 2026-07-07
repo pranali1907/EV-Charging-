@@ -1,0 +1,283 @@
+{% extends "layout.html" %}
+
+{% block title %}Booking Form - ChargeLive{% endblock %}
+
+{% block content %}
+<section class="booking-shell">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="details-breadcrumb fade-in">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('home.station_details', station_id=station.station_id) }}">{{ station.station_name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Booking Form</li>
+            </ol>
+        </nav>
+
+        <div class="booking-grid fade-in">
+            <aside class="booking-station-panel">
+                <span class="section-badge">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Mobile Verified
+                </span>
+                <h1>Booking form</h1>
+                <p>Your guest mobile number is verified. Slot booking details will be handled in the next module.</p>
+
+                <div class="booking-station-card">
+                    <div class="booking-station-icon">
+                        <i class="fa-solid fa-charging-station"></i>
+                    </div>
+                    <div>
+                        <strong>{{ station.station_name }}</strong>
+                        <span>{{ station.city }} &middot; {{ charger.charger_name }} &middot; {{ charger.connector_type }}</span>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="booking-card">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="booking-alerts">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} mb-3" role="alert">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form method="post" action="{{ url_for('book.submit_booking') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="station_id" value="{{ station.station_id }}">
+                    <input type="hidden" name="charger_id" value="{{ charger.charger_id }}">
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" for="guestMobile">Verified Mobile</label>
+                            <input id="guestMobile" class="form-control" type="text" value="+91 {{ mobile_number }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="stationName">Station</label>
+                            <input id="stationName" class="form-control" type="text" value="{{ station.station_name }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="chargerName">Selected Charger</label>
+                            <input id="chargerName" class="form-control" type="text" value="{{ charger.charger_name }} - {{ charger.connector_type }} - {{ "%.2f"|format(charger.power_kw) }} kW" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="bookingDate">Booking Date</label>
+                            <input id="bookingDate" name="booking_date" class="form-control" type="date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="bookingTime">Booking Start Time</label>
+                            <input type="text" id="bookingTime" name="booking_time" class="form-control" placeholder="Enter Time (hh:mm AM/PM)" required autocomplete="off">
+                            <div class="invalid-feedback" id="bookingTimeFeedback">Please enter a valid time in hh:mm AM/PM format (e.g., 10:15 AM).</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="bookingEndTime">Booking End Time (Auto)</label>
+                            <input type="text" id="bookingEndTime" class="form-control" placeholder="Automatically calculated" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="bookingDuration">Charging Duration</label>
+                            <select id="bookingDuration" name="booking_duration" class="form-select" required>
+                                <option value="15">15 Minutes</option>
+                                <option value="30">30 Minutes</option>
+                                <option value="45">45 Minutes</option>
+                                <option value="60" selected>60 Minutes (1 Hour)</option>
+                                <option value="90">90 Minutes</option>
+                                <option value="120">120 Minutes (2 Hours)</option>
+                                <option value="180">180 Minutes (3 Hours)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Booking Summary Card -->
+                    <div class="card p-3 bg-light border mb-4 rounded fade-in" id="bookingSummaryCard" style="display: none;">
+                        <h5 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-list-check me-2"></i>Booking Summary</h5>
+                        <div class="row g-2 small">
+                            <div class="col-6 text-muted">Station:</div>
+                            <div class="col-6 fw-semibold text-end">{{ station.station_name }}</div>
+                            
+                            <div class="col-6 text-muted">Selected Charger:</div>
+                            <div class="col-6 fw-semibold text-end">{{ charger.charger_name }}</div>
+                            
+                            <div class="col-6 text-muted">Connector Type:</div>
+                            <div class="col-6 fw-semibold text-end">{{ charger.connector_type }}</div>
+                            
+                            <div class="col-6 text-muted">Power Rating:</div>
+                            <div class="col-6 fw-semibold text-end">{{ "%.2f"|format(charger.power_kw) }} kW</div>
+                            
+                            <div class="col-6 text-muted">Price per kWh:</div>
+                            <div class="col-6 fw-semibold text-end text-success">Rs. {{ "%.2f"|format(station.price_per_kwh) }}/kWh</div>
+                            
+                            <hr class="my-2">
+                            
+                            <div class="col-6 text-muted">Date & Start Time:</div>
+                            <div class="col-6 fw-semibold text-end" id="summaryStart">--</div>
+                            
+                            <div class="col-6 text-muted">End Time (Calculated):</div>
+                            <div class="col-6 fw-semibold text-end" id="summaryEnd">--</div>
+                            
+                            <div class="col-6 text-muted">Duration:</div>
+                            <div class="col-6 fw-semibold text-end" id="summaryDuration">--</div>
+                            
+                            <div class="col-6 text-muted">Estimated Energy:</div>
+                            <div class="col-6 fw-semibold text-end text-primary" id="summaryEnergy">--</div>
+                            
+                            <div class="col-6 text-muted fw-bold">Estimated Cost:</div>
+                            <div class="col-6 fw-bold text-end text-success fs-6" id="summaryCost">--</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn btn-success w-100 mb-2">
+                        <i class="fa-solid fa-credit-card me-2"></i>
+                        Proceed to Payment
+                    </button>
+                    <a href="{{ url_for('home.station_details', station_id=station.station_id) }}" class="btn btn-outline-secondary w-100">
+                        Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const dateInput = document.getElementById("bookingDate");
+        const timeInput = document.getElementById("bookingTime");
+        const endTimeInput = document.getElementById("bookingEndTime");
+        const durationSelect = document.getElementById("bookingDuration");
+        const summaryCard = document.getElementById("bookingSummaryCard");
+        const invalidFeedback = document.getElementById("bookingTimeFeedback");
+        
+        const summaryStart = document.getElementById("summaryStart");
+        const summaryEnd = document.getElementById("summaryEnd");
+        const summaryDuration = document.getElementById("summaryDuration");
+        const summaryEnergy = document.getElementById("summaryEnergy");
+        const summaryCost = document.getElementById("summaryCost");
+
+        const powerKw = parseFloat("{{ charger.power_kw }}");
+        const pricePerKwh = parseFloat("{{ station.price_per_kwh }}");
+
+        // Set min date to today
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dateInput.min = `${yyyy}-${mm}-${dd}`;
+        dateInput.value = `${yyyy}-${mm}-${dd}`; // Default to today
+
+        function validateAndTimeCalculations() {
+            const dateVal = dateInput.value;
+            const timeVal = timeInput.value.trim();
+            const durationMins = parseInt(durationSelect.value);
+
+            if (!dateVal) {
+                summaryCard.style.display = "none";
+                endTimeInput.value = "";
+                return;
+            }
+
+            if (!timeVal) {
+                timeInput.classList.remove("is-invalid");
+                timeInput.classList.remove("is-valid");
+                timeInput.setCustomValidity("");
+                endTimeInput.value = "";
+                summaryCard.style.display = "none";
+                return;
+            }
+
+            // Regex Match: e.g. "10:15 AM" or "01:30 PM" or "10:15AM"
+            const regex = /^(0?[1-9]|1[0-2]):([0-5][0-9])\s*(AM|PM)$/i;
+            const match = timeVal.match(regex);
+
+            if (!match) {
+                timeInput.setCustomValidity("Invalid time format.");
+                invalidFeedback.textContent = "Please enter a valid time in hh:mm AM/PM format (e.g., 10:15 AM).";
+                timeInput.classList.add("is-invalid");
+                timeInput.classList.remove("is-valid");
+                endTimeInput.value = "";
+                summaryCard.style.display = "none";
+                return;
+            }
+
+            let [_, hourStr, minuteStr, ampm] = match;
+            let hour = parseInt(hourStr);
+            const minute = parseInt(minuteStr);
+            ampm = ampm.toUpperCase();
+
+            // Enforce double digits format for hour input
+            const displayStartH = String(hour).padStart(2, '0');
+            const displayStartM = String(minute).padStart(2, '0');
+            const standardStartTimeStr = `${displayStartH}:${displayStartM} ${ampm}`;
+
+            // Check if selected date is today, and if so prevent past times
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            if (dateVal === todayStr) {
+                let testHours = hour;
+                if (ampm === 'PM' && testHours < 12) testHours += 12;
+                if (ampm === 'AM' && testHours === 12) testHours = 0;
+
+                const now = new Date();
+                const currentH = now.getHours();
+                const currentM = now.getMinutes();
+
+                if (testHours < currentH || (testHours === currentH && minute <= currentM)) {
+                    timeInput.setCustomValidity("Cannot book a past time slot for today.");
+                    invalidFeedback.textContent = "Cannot book a past time slot for today.";
+                    timeInput.classList.add("is-invalid");
+                    timeInput.classList.remove("is-valid");
+                    endTimeInput.value = "";
+                    summaryCard.style.display = "none";
+                    return;
+                }
+            }
+
+            // If valid: reset validity
+            timeInput.setCustomValidity("");
+            timeInput.classList.remove("is-invalid");
+            timeInput.classList.add("is-valid");
+
+            // Calculate End Time using Date baseline
+            let start24H = hour;
+            if (ampm === 'PM' && start24H < 12) start24H += 12;
+            if (ampm === 'AM' && start24H === 12) start24H = 0;
+
+            const dummyDate = new Date(2000, 0, 1, start24H, minute);
+            const endDate = new Date(dummyDate.getTime() + durationMins * 60000);
+
+            const endHRaw = endDate.getHours();
+            const endMStr = String(endDate.getMinutes()).padStart(2, '0');
+            const endAmpmStr = endHRaw >= 12 ? 'PM' : 'AM';
+            let endHDisplay = endHRaw % 12;
+            endHDisplay = endHDisplay ? endHDisplay : 12;
+            const endHDisplayStr = String(endHDisplay).padStart(2, '0');
+
+            const endTimeFormatted = `${endHDisplayStr}:${endMStr} ${endAmpmStr}`;
+            endTimeInput.value = endTimeFormatted;
+
+            // Calculate Energy & Cost
+            const energyKwh = powerKw * (durationMins / 60.0);
+            const totalCost = energyKwh * pricePerKwh;
+
+            // Format date for summary
+            const dateObj = new Date(dateVal);
+            const dateString = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            summaryStart.textContent = `${dateString}, ${standardStartTimeStr}`;
+            summaryEnd.textContent = endTimeFormatted;
+            summaryDuration.textContent = `${durationMins} Minutes`;
+            summaryEnergy.textContent = `${energyKwh.toFixed(2)} kWh`;
+            summaryCost.textContent = `Rs. ${totalCost.toFixed(2)}`;
+
+            summaryCard.style.display = "block";
+        }
+
+        dateInput.addEventListener("change", validateAndTimeCalculations);
+        timeInput.addEventListener("input", validateAndTimeCalculations);
+        durationSelect.addEventListener("change", validateAndTimeCalculations);
+        
+        // Trigger initial calculation
+        validateAndTimeCalculations();
+    });
+</script>
+{% endblock %}

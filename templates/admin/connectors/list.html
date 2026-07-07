@@ -1,0 +1,91 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Connectors - ChargeLive Admin{% endblock %}
+
+{% block content %}
+<section class="admin-page-heading admin-page-heading-actions">
+    <div>
+        <span class="admin-eyebrow">Connector Management</span>
+        <h1>Connectors</h1>
+    </div>
+    <a class="btn btn-success rounded-pill" href="{{ url_for('admin.add_connector') }}">
+        <i class="bi bi-plus-lg me-1"></i>
+        Add Connector
+    </a>
+</section>
+
+<section class="admin-table-card">
+    {% if connectors %}
+        <div class="table-responsive">
+            <table class="table admin-table align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Connector</th>
+                        <th>Vehicle</th>
+                        <th>Default Power</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for connector in connectors %}
+                    <tr>
+                        <td>#{{ connector.id }}</td>
+                        <td><strong>{{ connector.connector_name }}</strong></td>
+                        <td>{{ connector.vehicle_type }}</td>
+                        <td>{{ "%.2f"|format(connector.default_power_kw) }} kW</td>
+                        <td>{{ "Standard" if connector.is_standard else "Custom" }}</td>
+                        <td>
+                            <span class="admin-status-pill admin-status-{{ 'active' if connector.is_active else 'inactive' }}">
+                                {{ "Active" if connector.is_active else "Inactive" }}
+                            </span>
+                        </td>
+                        <td>{{ connector.updated_at }}</td>
+                        <td>
+                            <div class="admin-table-actions">
+                                <a class="btn btn-sm btn-outline-success" href="{{ url_for('admin.edit_connector', connector_id=connector.id) }}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteConnectorModal{{ connector.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+
+                            <div class="modal fade" id="deleteConnectorModal{{ connector.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content admin-modal">
+                                        <div class="modal-header">
+                                            <h2 class="modal-title fs-5">Delete Connector</h2>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Delete <strong>{{ connector.connector_name }}</strong>?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form method="post" action="{{ url_for('admin.delete_connector_route', connector_id=connector.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="btn btn-danger" type="submit">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="admin-empty-state">
+            <i class="bi bi-plug"></i>
+            <h2>No connector types found</h2>
+            <p>Add a connector type before creating chargers.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

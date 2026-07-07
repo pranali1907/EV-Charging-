@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+    <title id="title">EV charging station placeholder</title>
+    <desc id="desc">Illustrated public electric vehicle charging station with green ChargeLive branding.</desc>
+    <defs>
+        <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#eff6ff"/>
+            <stop offset="58%" stop-color="#f8fafc"/>
+            <stop offset="100%" stop-color="#dcfce7"/>
+        </linearGradient>
+        <linearGradient id="charger" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#16a34a"/>
+            <stop offset="100%" stop-color="#0f766e"/>
+        </linearGradient>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.18"/>
+        </filter>
+    </defs>
+    <rect width="1200" height="800" fill="url(#sky)"/>
+    <path d="M0 610 C210 540 330 690 520 620 C730 540 850 610 1200 520 L1200 800 L0 800 Z" fill="#d1fae5"/>
+    <path d="M0 690 C240 625 380 745 610 690 C820 640 970 680 1200 625 L1200 800 L0 800 Z" fill="#bbf7d0"/>
+    <g filter="url(#shadow)">
+        <rect x="438" y="172" width="276" height="438" rx="42" fill="#ffffff"/>
+        <rect x="468" y="204" width="216" height="156" rx="24" fill="#0f172a"/>
+        <circle cx="576" cy="282" r="46" fill="url(#charger)"/>
+        <path d="M586 235 L540 298 H574 L562 332 L614 265 H580 Z" fill="#ffffff"/>
+        <rect x="486" y="392" width="180" height="36" rx="18" fill="#dcfce7"/>
+        <rect x="486" y="450" width="126" height="22" rx="11" fill="#e2e8f0"/>
+        <rect x="486" y="494" width="158" height="22" rx="11" fill="#e2e8f0"/>
+        <rect x="514" y="610" width="124" height="70" rx="16" fill="#0f172a"/>
+    </g>
+    <g filter="url(#shadow)">
+        <path d="M720 380 C780 338 864 350 916 406 L994 492 C1012 512 1000 546 972 546 H696 C672 546 658 518 672 498 Z" fill="#ffffff"/>
+        <rect x="734" y="422" width="176" height="42" rx="19" fill="#dbeafe"/>
+        <circle cx="738" cy="552" r="38" fill="#0f172a"/>
+        <circle cx="930" cy="552" r="38" fill="#0f172a"/>
+        <circle cx="738" cy="552" r="15" fill="#94a3b8"/>
+        <circle cx="930" cy="552" r="15" fill="#94a3b8"/>
+        <path d="M838 378 L876 464 H788 L812 404 C818 390 826 382 838 378 Z" fill="#bfdbfe"/>
+    </g>
+    <path d="M712 318 C808 304 814 378 760 400" fill="none" stroke="#16a34a" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="762" cy="404" r="20" fill="#16a34a"/>
+    <g fill="#0f172a" opacity="0.12">
+        <circle cx="156" cy="190" r="58"/>
+        <circle cx="1014" cy="172" r="76"/>
+        <circle cx="1018" cy="660" r="42"/>
+    </g>
+</svg>
