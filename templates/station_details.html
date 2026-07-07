@@ -3,206 +3,225 @@
 {% block title %}{{ station.station_name }} - ChargeLive{% endblock %}
 
 {% block content %}
-<section class="details-shell">
+{% block content %}
+<div class="details-page-wrapper">
     <div class="container">
-        <nav aria-label="breadcrumb" class="details-breadcrumb fade-in">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}#stations">Stations</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Station Details</li>
-            </ol>
-        </nav>
-
-        <div class="station-banner fade-in">
-            <div class="station-image-wrap">
-                <img src="{{ url_for('static', filename=station.image_url if station.image_url else 'images/station-placeholder.svg') }}" alt="{{ station.station_name }}" class="station-detail-image">
+        <div class="details-grid-wrapper">
+            <!-- 1. Breadcrumb -->
+            <div class="grid-row-breadcrumb">
+                <nav aria-label="breadcrumb" class="details-breadcrumb fade-in">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}#stations">Stations</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Station Details</li>
+                    </ol>
+                </nav>
             </div>
-            <div class="station-detail-summary">
-                <span class="section-badge">
-                    <i class="fa-solid fa-charging-station"></i>
-                    Public Charging Station
-                </span>
-                <div class="detail-title-row">
-                    <div>
-                        <h1>{{ station.station_name }}</h1>
-                        <p class="station-detail-city">
-                            <i class="fa-solid fa-location-dot"></i>
-                            {{ station.city }}
-                        </p>
-                    </div>
-                    <span class="status-badge status-{{ station.status | lower }}">{{ station.status }}</span>
-                </div>
 
-                <div class="detail-metrics">
-                    <div class="meta-item">
-                        <span>Distance</span>
-                        <strong id="detailDistance" data-latitude="{{ station.latitude }}" data-longitude="{{ station.longitude }}">Allow location</strong>
+            <!-- 2. Navigation Sidebar Panel -->
+            <div class="grid-row-navigation">
+                <div class="details-card fade-in">
+                    <div class="details-card-heading">
+                        <span class="section-badge">
+                            <i class="fa-solid fa-route"></i>
+                            Navigation Panel
+                        </span>
+                        <h2>Route Tracker</h2>
                     </div>
-                    <div class="meta-item">
-                        <span>Price per kWh</span>
-                        <strong>Rs. {{ station.price_per_kwh }}</strong>
+                    <div class="navigation-panel p-0 border-0 shadow-none">
+                        <div class="navigation-actions">
+                            <button id="startNavigationBtn" class="btn btn-success rounded-pill me-2 w-100 py-2 fw-bold mb-2" type="button">
+                                <i class="fa-solid fa-route me-2"></i>
+                                Start Navigation
+                            </button>
+                            <button id="stopNavigationBtn" class="btn btn-outline-secondary rounded-pill w-100 py-2 fw-bold mb-2 d-none" type="button">
+                                <i class="fa-solid fa-stop me-2"></i>
+                                Stop Navigation
+                            </button>
+                        </div>
+                        <div class="navigation-status alert alert-info py-2 small mb-2" id="navigationStatus">Press Start Navigation to begin live route tracking.</div>
+                        <div class="navigation-metrics d-flex flex-wrap gap-2 mb-2">
+                            <div class="meta-item flex-fill bg-light p-2 rounded border text-center">
+                                <span class="d-block small text-muted">ETA</span>
+                                <strong id="navigationEta" class="fs-6">--</strong>
+                            </div>
+                            <div class="meta-item flex-fill bg-light p-2 rounded border text-center">
+                                <span class="d-block small text-muted">Distance</span>
+                                <strong id="navigationDistance" class="fs-6">--</strong>
+                            </div>
+                        </div>
+                        <div class="next-turn bg-light p-2 rounded border mb-2 small">
+                            <span class="text-muted fw-semibold">Next Turn</span>
+                            <p id="nextTurn" class="mb-0 fw-bold">Waiting for route...</p>
+                        </div>
+                        <div class="navigation-steps mt-3">
+                            <h3 class="fs-6 fw-bold border-bottom pb-1 mb-2">Instructions</h3>
+                            <ol id="navigationSteps" class="ps-3 small text-muted mb-0" style="max-height: 200px; overflow-y: auto;"></ol>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="connector-list detail-connectors">
-                    {% for connector in station.connector_types %}
-                    <span class="connector-badge">{{ connector }}</span>
-                    {% else %}
-                    <span class="connector-badge">No chargers added</span>
+            <!-- 3. Station Banner -->
+            <div class="grid-row-banner">
+                <div class="station-banner fade-in">
+                    <div class="station-image-wrap">
+                        <img src="{{ url_for('static', filename=station.image_url if station.image_url else 'images/station-placeholder.svg') }}" alt="{{ station.station_name }}" class="station-detail-image">
+                    </div>
+                    <div class="station-detail-summary">
+                        <span class="section-badge">
+                            <i class="fa-solid fa-charging-station"></i>
+                            Public Charging Station
+                        </span>
+                        <div class="detail-title-row">
+                            <div>
+                                <h1>{{ station.station_name }}</h1>
+                                <p class="station-detail-city">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                    {{ station.city }}
+                                </p>
+                            </div>
+                            <span class="status-badge status-{{ station.status | lower }}">{{ station.status }}</span>
+                        </div>
+
+                        <div class="detail-metrics">
+                            <div class="meta-item">
+                                <span>Distance</span>
+                                <strong id="detailDistance" data-latitude="{{ station.latitude }}" data-longitude="{{ station.longitude }}">Allow location</strong>
+                            </div>
+                            <div class="meta-item">
+                                <span>Price per kWh</span>
+                                <strong>Rs. {{ station.price_per_kwh }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="connector-list detail-connectors">
+                            {% for connector in station.connector_types %}
+                            <span class="connector-badge">{{ connector }}</span>
+                            {% else %}
+                            <span class="connector-badge">No chargers added</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="detail-actions">
+                            <button id="shareLocationBtn" class="btn btn-outline-primary rounded-pill" type="button" data-station-name="{{ station.station_name }}" data-latitude="{{ station.latitude }}" data-longitude="{{ station.longitude }}">
+                                <i class="fa-solid fa-share-nodes me-2"></i>
+                                Share Location
+                            </button>
+                            <a href="{{ url_for('home.index') }}#stations" class="btn btn-outline-secondary rounded-pill">
+                                <i class="fa-solid fa-arrow-left me-2"></i>
+                                Back to Stations
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Charger Overview -->
+            <div class="grid-row-overview">
+                <div class="row g-3">
+                    {% for item in charger_overview %}
+                    <div class="col-sm-6 col-lg-3">
+                        <div class="overview-card fade-in">
+                            <span class="overview-icon">
+                                <i class="fa-solid {{ item.icon }}"></i>
+                            </span>
+                            <div>
+                                <p>{{ item.label }}</p>
+                                <strong>{{ item.value }}</strong>
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
                 </div>
-
-                <div class="detail-actions">
-                    <button id="shareLocationBtn" class="btn btn-outline-primary rounded-pill" type="button" data-station-name="{{ station.station_name }}" data-latitude="{{ station.latitude }}" data-longitude="{{ station.longitude }}">
-                        <i class="fa-solid fa-share-nodes me-2"></i>
-                        Share Location
-                    </button>
-                    <a href="{{ url_for('home.index') }}#stations" class="btn btn-outline-secondary rounded-pill">
-                        <i class="fa-solid fa-arrow-left me-2"></i>
-                        Back to Stations
-                    </a>
-                </div>
             </div>
-        </div>
-    </div>
-</section>
 
-<section class="details-section">
-    <div class="container">
-        <div class="row g-4">
-            {% for item in charger_overview %}
-            <div class="col-sm-6 col-lg-3">
-                <div class="overview-card fade-in">
-                    <span class="overview-icon">
-                        <i class="fa-solid {{ item.icon }}"></i>
-                    </span>
-                    <div>
-                        <p>{{ item.label }}</p>
-                        <strong>{{ item.value }}</strong>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<section class="details-section pt-0">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <div class="details-card h-100 fade-in">
-                    <div class="details-card-heading">
-                        <span class="section-badge">
-                            <i class="fa-solid fa-circle-info"></i>
-                            Charging Information
-                        </span>
-                        <h2>Charging Details</h2>
-                    </div>
-                    <div class="charging-info-list">
-                        {% for item in charging_info %}
-                        <div class="charging-info-item">
-                            <span>{{ item.label }}</span>
-                            <strong>{{ item.value }}</strong>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="details-card h-100 fade-in">
-                    <div class="details-card-heading">
-                        <span class="section-badge">
-                            <i class="fa-solid fa-plug-circle-bolt"></i>
-                            Charger Selection
-                        </span>
-                        <h2>Available Chargers</h2>
-                    </div>
-                    <div class="charger-list">
-                        {% for charger in enriched_chargers %}
-                        <div class="charger-item flex-column align-items-start gap-2 border-bottom py-3">
-                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                <div>
-                                    <strong class="fs-6">{{ charger.charger_name }}</strong>
-                                    <span class="d-block text-muted small mt-1">{{ charger.connector_type }} &middot; {{ "%.2f"|format(charger.power_kw) }} kW &middot; {{ charger.vehicle_type }}</span>
-                                </div>
-                                <div class="charger-actions">
-                                    <span class="status-badge status-{{ charger.status | lower | replace(' ', '-') }}">{{ charger.status }}</span>
-                                    {% if charger.status == 'Available' %}
-                                        <a class="btn btn-sm btn-primary rounded-pill px-3" href="{{ url_for('book.verify', station_id=station.station_id, charger_id=charger.charger_id) }}">
-                                            Book Slot
-                                        </a>
-                                    {% else %}
-                                        <button class="btn btn-sm btn-secondary rounded-pill disabled px-3" type="button" disabled>
-                                            Book Slot
-                                        </button>
-                                    {% endif %}
-                                </div>
+            <!-- 5. Available Chargers -->
+            <div class="grid-row-chargers">
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <div class="details-card h-100 fade-in">
+                            <div class="details-card-heading">
+                                <span class="section-badge">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Charging Information
+                                </span>
+                                <h2>Charging Details</h2>
                             </div>
-                            <div class="w-100 bg-light p-2 rounded border small text-dark d-flex justify-content-between">
-                                <div><strong>Current Booking:</strong> <span class="text-primary">{{ charger.current_booking }}</span></div>
-                                <div><strong>Next Free:</strong> <span class="text-success">{{ charger.next_available_time }}</span></div>
+                            <div class="charging-info-list">
+                                {% for item in charging_info %}
+                                <div class="charging-info-item">
+                                    <span>{{ item.label }}</span>
+                                    <strong>{{ item.value }}</strong>
+                                </div>
+                                {% endfor %}
                             </div>
                         </div>
-                        {% else %}
-                        <div class="empty-state py-4 text-center">
-                            <h3>No Chargers Added</h3>
-                            <p>This station is not ready for booking yet.</p>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="details-card h-100 fade-in">
+                            <div class="details-card-heading">
+                                <span class="section-badge">
+                                    <i class="fa-solid fa-plug-circle-bolt"></i>
+                                    Charger Selection
+                                </span>
+                                <h2>Available Chargers</h2>
+                            </div>
+                            <div class="charger-list">
+                                {% for charger in enriched_chargers %}
+                                <div class="charger-item flex-column align-items-start gap-2 border-bottom py-3">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <strong class="fs-6">{{ charger.charger_name }}</strong>
+                                            <span class="d-block text-muted small mt-1">{{ charger.connector_type }} &middot; {{ "%.2f"|format(charger.power_kw) }} kW &middot; {{ charger.vehicle_type }}</span>
+                                        </div>
+                                        <div class="charger-actions">
+                                            <span class="status-badge status-{{ charger.status | lower | replace(' ', '-') }}">{{ charger.status }}</span>
+                                            {% if charger.status == 'Available' %}
+                                                <a class="btn btn-sm btn-primary rounded-pill px-3" href="{{ url_for('book.verify', station_id=station.station_id, charger_id=charger.charger_id) }}">
+                                                    Book Slot
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-secondary rounded-pill disabled px-3" type="button" disabled>
+                                                    Book Slot
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="w-100 bg-light p-2 rounded border small text-dark d-flex justify-content-between">
+                                        <div><strong>Current Booking:</strong> <span class="text-primary">{{ charger.current_booking }}</span></div>
+                                        <div><strong>Next Free:</strong> <span class="text-success">{{ charger.next_available_time }}</span></div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="empty-state py-4 text-center">
+                                    <h3>No Chargers Added</h3>
+                                    <p>This station is not ready for booking yet.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                        {% endfor %}
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
 
-<section class="details-section pt-0">
-    <div class="container">
-        <div class="details-card fade-in">
-            <div class="details-card-heading location-heading">
-                <div>
-                    <span class="section-badge">
-                        <i class="fa-solid fa-map-location-dot"></i>
-                        Location
-                    </span>
-                    <h2>Station Location</h2>
-                </div>
-                <p>{{ station.station_name }}, {{ station.city }}</p>
-            </div>
-            <div id="stationDetailMap" class="station-detail-map" data-station-name="{{ station.station_name }}" data-city="{{ station.city }}" data-latitude="{{ station.latitude }}" data-longitude="{{ station.longitude }}"></div>
-            <div class="navigation-panel mt-4">
-                <div class="navigation-actions">
-                    <button id="startNavigationBtn" class="btn btn-success rounded-pill me-2" type="button">
-                        <i class="fa-solid fa-route me-2"></i>
-                        Start Navigation
-                    </button>
-                    <button id="stopNavigationBtn" class="btn btn-outline-secondary rounded-pill d-none" type="button">
-                        <i class="fa-solid fa-stop me-2"></i>
-                        Stop Navigation
-                    </button>
-                </div>
-                <div class="navigation-status" id="navigationStatus">Press Start Navigation to begin live route tracking.</div>
-                <div class="navigation-metrics d-flex flex-wrap gap-3 mt-3">
-                    <div class="meta-item">
-                        <span>ETA</span>
-                        <strong id="navigationEta">--</strong>
+            <!-- 6. Map / Location Card -->
+            <div class="grid-row-map">
+                <div class="details-card fade-in">
+                    <div class="details-card-heading location-heading">
+                        <div>
+                            <span class="section-badge">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                                Location
+                            </span>
+                            <h2>Station Location</h2>
+                        </div>
+                        <p>{{ station.station_name }}, {{ station.city }}</p>
                     </div>
-                    <div class="meta-item">
-                        <span>Distance</span>
-                        <strong id="navigationDistance">--</strong>
-                    </div>
-                </div>
-                <div class="next-turn mt-3">
-                    <span>Next Turn</span>
-                    <p id="nextTurn" class="mb-0">Waiting for route...</p>
-                </div>
-                <div class="navigation-steps mt-3">
-                    <h3>Instructions</h3>
-                    <ol id="navigationSteps" class="ps-3"></ol>
+                    <div id="stationDetailMap" class="station-detail-map" data-station-name="{{ station.station_name }}" data-city="{{ station.city }}" data-latitude="{{ station.latitude }}" data-longitude="{{ station.longitude }}"></div>
                 </div>
             </div>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}

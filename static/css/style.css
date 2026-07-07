@@ -1639,6 +1639,64 @@ body.discovery-active .footer {
     }
 }
 
+/* Station Details Responsive Layout Grid */
+.details-page-wrapper {
+    padding: 7rem 0 3rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    min-height: 100vh;
+}
+
+.details-grid-wrapper {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-template-areas:
+        "nav breadcrumb"
+        "nav banner"
+        "nav overview"
+        "nav chargers"
+        "nav map";
+    gap: 24px;
+    align-items: start;
+}
+
+.grid-row-breadcrumb { grid-area: breadcrumb; }
+.grid-row-navigation { grid-area: nav; position: sticky; top: 100px; z-index: 10; }
+.grid-row-banner { grid-area: banner; }
+.grid-row-overview { grid-area: overview; }
+.grid-row-chargers { grid-area: chargers; }
+.grid-row-map { grid-area: map; }
+
+/* Override Absolute styles of .navigation-panel on Details page */
+.details-grid-wrapper .navigation-panel {
+    position: static;
+    width: 100%;
+    z-index: 1;
+    background: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border-color);
+    margin-top: 0 !important;
+}
+
+@media (max-width: 991px) {
+    .details-grid-wrapper {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "breadcrumb"
+            "banner"
+            "nav"
+            "overview"
+            "chargers"
+            "map";
+        gap: 16px;
+    }
+    
+    .grid-row-navigation {
+        position: static;
+        top: 0;
+        z-index: 1;
+    }
+}
+
 
 
 
