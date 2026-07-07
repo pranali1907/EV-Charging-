@@ -55,6 +55,14 @@ def create_app():
                 abort(400, description="CSRF token missing or invalid.")
 
     with app.app_context():
+        try:
+            import os
+            from flask_migrate import upgrade as flask_db_upgrade
+            migrations_dir = os.path.join(os.path.dirname(__file__), "migrations")
+            flask_db_upgrade(directory=migrations_dir)
+            print("Database migrations applied successfully.")
+        except Exception as err:
+            print(f"Database migrations upgrade failed: {err}")
         test_database_connection()
         seed_default_connectors()
 
